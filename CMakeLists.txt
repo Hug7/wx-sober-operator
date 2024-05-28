@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.24)
 project(wx_sober_operator)
 
 set(CMAKE_CXX_STANDARD 11)

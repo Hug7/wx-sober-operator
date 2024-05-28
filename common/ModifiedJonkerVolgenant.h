@@ -20,9 +20,11 @@ private:
     vector<vector<double>> cost;  // 成本
     bool maximize;  // 最大化
 public:
-    ModifiedJonkerVolgenant(vector<vector<double>> cost);
+    ModifiedJonkerVolgenant();
 
-    ModifiedJonkerVolgenant(vector<vector<double>> cost, bool maximize);
+    ModifiedJonkerVolgenant(vector<vector<double>> &cost);
+
+    ModifiedJonkerVolgenant(vector<vector<double>> &cost, bool maximize);
 
     void assign();
 
