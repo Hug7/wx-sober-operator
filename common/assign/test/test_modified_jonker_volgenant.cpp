@@ -1,10 +1,6 @@
-//
-// Created by lq on 2024/5/27.
-//
 #include <cstdio>
-#include "common/assign/ModifiedJonkerVolgenant.cpp"
 #include "vector"
-
+#include "../ModifiedJonkerVolgenant.cpp"
 using namespace std;
 
 int main() {
@@ -20,13 +16,13 @@ int main() {
     }
     for (int u = 0; u < rowCount; ++u) {
         for (int m = 0; m < colCount; ++m) {
-            cost[u][m] = (u + 1) * (m + 1);
+            cost[u][m] = 2 + (u + 1) * (m + 1);
         }
     }
 
 
     ModifiedJonkerVolgenant *modifiedJonkerVolgenant = new ModifiedJonkerVolgenant(cost);
-//    ModifiedJonkerVolgenant * modifiedJonkerVolgenant = new ModifiedJonkerVolgenant();
+////    ModifiedJonkerVolgenant * modifiedJonkerVolgenant = new ModifiedJonkerVolgenant();
     modifiedJonkerVolgenant->assign();
     printf("cost = %f", modifiedJonkerVolgenant->getGain());
     return 0;
