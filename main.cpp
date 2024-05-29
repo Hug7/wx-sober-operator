@@ -25,7 +25,7 @@ int main() {
     }
 
 
-    ModifiedJonkerVolgenant *modifiedJonkerVolgenant = new ModifiedJonkerVolgenant(cost);
+    ModifiedJonkerVolgenant *modifiedJonkerVolgenant = new ModifiedJonkerVolgenant(cost, true);
 //    ModifiedJonkerVolgenant * modifiedJonkerVolgenant = new ModifiedJonkerVolgenant();
     modifiedJonkerVolgenant->assign();
     printf("cost = %f", modifiedJonkerVolgenant->getGain());

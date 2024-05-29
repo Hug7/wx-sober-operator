@@ -3,6 +3,7 @@
 #include "memory"
 #include "limits"
 #include "algorithm"
+#include "iostream"
 
 using namespace std;
 
@@ -47,8 +48,7 @@ ModifiedJonkerVolgenant::ModifiedJonkerVolgenant(vector<vector<double>> &inputCo
     this->rowDual = new double[this->rowCount];
 }
 
-ModifiedJonkerVolgenant::ModifiedJonkerVolgenant(vector<vector<double>> &cost) {
-    ModifiedJonkerVolgenant(cost, true);
+ModifiedJonkerVolgenant::ModifiedJonkerVolgenant(vector<vector<double>> &cost) : ModifiedJonkerVolgenant(cost, true) {
 }
 
 ModifiedJonkerVolgenant::~ModifiedJonkerVolgenant() {
@@ -73,8 +73,9 @@ void ModifiedJonkerVolgenant::assign() {
     //
     for (int curUnassignedCol = 0; curUnassignedCol < this->colCount; ++curUnassignedCol) {
         // 找到从k开始的最短增广路径，并返回路径中的最后一个节点
-        shared_ptr<int> pred(new int[this->rowCount]);
-        int sink = shortestPath(curUnassignedCol, pred);
+        shared_ptr<int[]> pred(new int[this->rowCount]);
+        fill(pred.get(), pred.get() + this->rowCount, -1);
+        int sink = this->shortestPath(curUnassignedCol, pred);
         // 如果问题不可行，标记并返回
         if (sink == -1) {
             this->col4row = nullptr;
@@ -84,7 +85,7 @@ void ModifiedJonkerVolgenant::assign() {
         }
         int m = sink;
         while (true) {
-            int u = pred.get()[m];
+            int u = pred[m];
             this->col4row[m] = u;
             int v = this->row4col[u];
             this->row4col[u] = m;
@@ -141,42 +142,44 @@ double ModifiedJonkerVolgenant::amendCost() {
     return costShift;
 }
 
-int ModifiedJonkerVolgenant::shortestPath(int curUnassignedCol, shared_ptr<int> &pred) {
+int ModifiedJonkerVolgenant::shortestPath(int curUnassignedCol, shared_ptr<int[]> &pred) {
     // 初始化，没有行、列被扫描
     // 这将在已扫描的每一 列 中存储一个1
-    unique_ptr<bool> scannedCols(new bool[this->colCount]);
+    unique_ptr<bool[]> scannedCols(new bool[this->colCount]);
+    fill(scannedCols.get(), scannedCols.get() + this->colCount, false);
     // 这将在已扫描的每一 行 中存储一个1
-    unique_ptr<bool> scannedRows(new bool[this->rowCount]);
+    unique_ptr<bool[]> scannedRows(new bool[this->rowCount]);
+    fill(scannedRows.get(), scannedRows.get() + this->rowCount, false);
     // 待扫描的列
-    unique_ptr<int> row2Scan(new int[this->rowCount]);
+    unique_ptr<int[]> row2Scan(new int[this->rowCount]);
     for (int u = 0; u < this->rowCount; ++u) {
-        row2Scan.get()[u] = u;
+        row2Scan[u] = u;
     }
     int sink = -1;
     double delta = 0.;
     int curCol = curUnassignedCol;
-    unique_ptr<double> shortestPathCost(new double[this->rowCount]);
+    unique_ptr<double[]> shortestPathCost(new double[this->rowCount]);
     fill(shortestPathCost.get(), shortestPathCost.get() + this->rowCount, numeric_limits<double>::max());
 
     while (sink == -1) {
         // 标记当前 行 被访问
-        scannedCols.get()[curCol] = true;
+        scannedCols[curCol] = true;
         // 扫描所有没有被扫描的列
-        double minVal = numeric_limits<double>::min();
+        double minVal = numeric_limits<double>::max();
         int closestRowScan = -1;
         for (int curRowScan = 0; curRowScan < this->rowCount; ++curRowScan) {
-            int curRow = row2Scan.get()[curRowScan];
+            int curRow = row2Scan[curRowScan];
             if (curRow == -1) {
                 continue;
             }
             double reducedCost = delta + this->cost[curRow][curCol] - this->colDual[curCol] - this->rowDual[curRow];
-            if (reducedCost < shortestPathCost.get()[curRow]) {
-                pred.get()[curRow] = curCol;
-                shortestPathCost.get()[curRow] = reducedCost;
+            if (reducedCost < shortestPathCost[curRow]) {
+                pred[curRow] = curCol;
+                shortestPathCost[curRow] = reducedCost;
             }
             // 找到扫描的最小未分配列
-            if (shortestPathCost.get()[curRow] < minVal) {
-                minVal = shortestPathCost.get()[curRow];
+            if (shortestPathCost[curRow] < minVal) {
+                minVal = shortestPathCost[curRow];
                 closestRowScan = curRowScan;
             }
         }
@@ -184,11 +187,11 @@ int ModifiedJonkerVolgenant::shortestPath(int curUnassignedCol, shared_ptr<int> 
             // 如果最小成本列不是有限的，这个问题无解
             return 0;
         }
-        int closestRow = row2Scan.get()[closestRowScan];
+        int closestRow = row2Scan[closestRowScan];
         // 将该列添加到扫描列的列表中，并从要扫描的列的列表中删除该列
-        scannedRows.get()[closestRow] = true;
-        row2Scan.get()[closestRowScan] = -1;
-        delta = shortestPathCost.get()[closestRow];
+        scannedRows[closestRow] = true;
+        row2Scan[closestRowScan] = -1;
+        delta = shortestPathCost[closestRow];
         // 如果我们到达了一个未分配的行
         if (this->col4row[closestRow] == -1) {
             sink = closestRow;
@@ -202,18 +205,18 @@ int ModifiedJonkerVolgenant::shortestPath(int curUnassignedCol, shared_ptr<int> 
 
     for (int u = 0; u < this->colCount; ++u) {
         // 在增广路径中更新 行 的松弛
-        if (scannedCols.get()[u] && u != curUnassignedCol) {
-            this->colDual[u] += delta - shortestPathCost.get()[this->row4col[u]];
+        if (scannedCols[u] && u != curUnassignedCol) {
+            this->colDual[u] += delta - shortestPathCost[this->row4col[u]];
         }
     }
     for (int u = 0; u < this->rowCount; ++u) {
         // 在增广路径中更新 列 的松弛
-        if (scannedRows.get()[u]) {
-            this->rowDual[u] += -delta + shortestPathCost.get()[u];
+        if (scannedRows[u]) {
+            this->rowDual[u] += -delta + shortestPathCost[u];
         }
     }
 
-    return -1;
+    return sink;
 }
 
 int *ModifiedJonkerVolgenant::getCol4Row() const {

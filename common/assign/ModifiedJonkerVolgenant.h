@@ -2,6 +2,7 @@
 #define WX_SOBER_OPERATOR_MODIFIEDJONKERVOLGENANT_H
 
 #include "vector"
+#include "memory"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ private:
     double amendCost();
 
     // 增广路径
-    int shortestPath(int curUnassignedCol, shared_ptr<int> &pred);
+    int shortestPath(int curUnassignedCol, shared_ptr<int[]> &pred);
 };
 
 

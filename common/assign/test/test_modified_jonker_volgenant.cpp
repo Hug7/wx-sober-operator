@@ -1,5 +1,7 @@
 #include <cstdio>
+#include "memory"
 #include "vector"
+#include "iostream"
 #include "../ModifiedJonkerVolgenant.cpp"
 using namespace std;
 
@@ -20,10 +22,8 @@ int main() {
         }
     }
 
-
     ModifiedJonkerVolgenant *modifiedJonkerVolgenant = new ModifiedJonkerVolgenant(cost);
-////    ModifiedJonkerVolgenant * modifiedJonkerVolgenant = new ModifiedJonkerVolgenant();
     modifiedJonkerVolgenant->assign();
-    printf("cost = %f", modifiedJonkerVolgenant->getGain());
+    printf("cost = %f \n", modifiedJonkerVolgenant->getGain());
     return 0;
 }
